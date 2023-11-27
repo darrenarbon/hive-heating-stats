@@ -1,0 +1,6 @@
+{
+    "name": "hive-heating-stats",
+    "render_readme": true,
+    "content_in_root": false,
+    "filename": "hive-heating-stats.js"
+}
