@@ -1,0 +1,9 @@
+dist/*
+!dist/hive-heating-stats-card.js
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
