@@ -1,6 +1,6 @@
 {
 	"name": "hive-heating-stats",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "A home assistant card to monitor hive heating stats",
 	"main": "hive-heating-stats.js",
 	"scripts": {
