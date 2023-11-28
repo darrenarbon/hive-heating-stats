@@ -110,7 +110,7 @@ export class HiveHeatingStatsCard extends LitElement {
                         </tr>
                     </table>
                     <textarea>
-                        ${sensorInformation}
+                        ${JSON.stringify(sensorInformation)}
                     </textarea>
                 </div>
             </div>
