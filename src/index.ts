@@ -7,7 +7,7 @@ import { styles } from './style';
 @customElement('hive-heating-stats-card')
 export class HiveHeatingStatsCard extends LitElement {
 	@property() public hass!: HomeAssistant;
-    @property() private _config!: any;
+	@property() private _config!: any;
 
 	static get styles(): CSSResultGroup {
 		return styles;
@@ -17,12 +17,13 @@ export class HiveHeatingStatsCard extends LitElement {
 		return {};
 	}
 
-    setConfig(config) {
-        this._config = config;
-    }
+	setConfig(config) {
+		this._config = config;
+	}
 
 	getState(entity: string, defaultValue?: any) {
 		const state = this.hass.states[entity];
+		console.log(state);
 		return state !== undefined ? state : defaultValue;
 	}
 
