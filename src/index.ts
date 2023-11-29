@@ -195,8 +195,8 @@ export class HiveHeatingStatsCard extends LitElement {
 				timeBlock: timeIntoTimeBlock,
 				totalSeconds: data.value,
 				lineChartPercentage: (data.value / this._maxTime) * 100 * 0.8,
-				minTemp: data.minTemp,
-				maxTemp: data.maxTemp,
+				minTemp: Math.floor(data.minTemp),
+				maxTemp: Math.floor(data.maxTemp),
 			};
 		});
 	}
