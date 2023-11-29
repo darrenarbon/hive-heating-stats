@@ -174,6 +174,7 @@ export class HiveHeatingStatsCard extends LitElement {
 	render() {
 		const sensorInformation = this.getState('sensor.heating_on_today');
 		this.getData();
+		const tableInformation = html`${this._weeklyData}`;
 		return html`
 			<div class="ha-card">
 				<div class="container card">
@@ -203,7 +204,7 @@ export class HiveHeatingStatsCard extends LitElement {
 							</tr>
 						</head>
 						<tbody>
-							${this._dataLoaded ? html`${this._weeklyData}` : ''}
+							${this._dataLoaded ? tableInformation : ''}
 						</tbody>
 					</table>
 					<textarea>
