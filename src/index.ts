@@ -64,7 +64,6 @@ export class HiveHeatingStatsCard extends LitElement {
 
 	getState(entity: string, defaultValue?: any) {
 		const state = this.hass.states[entity];
-		console.log(state);
 		return state !== undefined ? state : defaultValue;
 	}
 
@@ -119,7 +118,6 @@ export class HiveHeatingStatsCard extends LitElement {
 				date.value = Number(maxValue);
 			}
 		}
-		console.log(this._dateData);
 		this._totalTime = this.calculateTotalTime();
 		this._averageTime = this.calculateAverageTime();
 		this._weeklyData = this.createDayHtml();
@@ -205,7 +203,7 @@ export class HiveHeatingStatsCard extends LitElement {
 							</tr>
 						</head>
 						<tbody>
-							${this._weeklyData}
+							${this._dataLoaded ? html`${this._weeklyData}` : ''}
 						</tbody>
 					</table>
 					<textarea>
