@@ -27,8 +27,36 @@ export class HiveHeatingStatsCard extends LitElement {
 		return state !== undefined ? state : defaultValue;
 	}
 
-	render() {
+	async getData() {
+		const today = new Date();
+		const sevenDaysAgo: Date = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+		const startDate: Date = new Date(
+			sevenDaysAgo.getFullYear(),
+			sevenDaysAgo.getMonth(),
+			sevenDaysAgo.getDate(),
+			0,
+			0,
+			0,
+			0,
+		);
+		const endDate: Date = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+
+		const dataRequest = {
+			type: 'history/history_during_period',
+			start_time: startDate.toISOString(),
+			end_time: endDate.toISOString(),
+			minimal_response: true,
+			no_attributes: true,
+			entity_ids: 'sensor.heating_on_today',
+		};
+		const dataReceived = await this.hass.callWS(dataRequest);
+		console.log('in function', dataReceived);
+		return dataReceived;
+	}
+
+	async render() {
 		const sensorInformation = this.getState('sensor.heating_on_today');
+		console.log('in render', await this.getData());
 		return html`
             <div class="ha-card">
                 <div class="container card">
