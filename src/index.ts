@@ -23,6 +23,7 @@ type formattedWeeklyData = {
 	day: string;
 	timeBlock: TimeBlock;
 	totalSeconds: number;
+	lineChartPercentage: number;
 };
 
 type HassData = {
@@ -56,8 +57,8 @@ export class HiveHeatingStatsCard extends LitElement {
 	private _totalTime: TimeBlock = { hours: 0, minutes: 0 };
 	private _averageTime: TimeBlock = { hours: 0, minutes: 0 };
 	private _dataLoaded: boolean = false;
-	private _weeklyData: any;
 	private _formattedWeeklyData: formattedWeeklyData[] = [];
+	private _maxTime: number = 0;
 
 	static get styles(): CSSResultGroup {
 		return styles;
@@ -129,7 +130,18 @@ export class HiveHeatingStatsCard extends LitElement {
 		}
 		this._totalTime = this.calculateTotalTime();
 		this._averageTime = this.calculateAverageTime();
-		this._weeklyData = this.createFormattedData();
+		this._maxTime = this.calculateMaxTime();
+		this._formattedWeeklyData = this.createFormattedData();
+	}
+
+	calculateMaxTime(): number {
+		let maxTime = 0;
+		this._dateData.forEach((data) => {
+			if (data.value > maxTime) {
+				maxTime = data.value;
+			}
+		});
+		return maxTime;
 	}
 
 	calculateTotalTime(): TimeBlock {
@@ -159,7 +171,7 @@ export class HiveHeatingStatsCard extends LitElement {
 	}
 
 	createFormattedData() {
-		this._formattedWeeklyData = this._dateData.map((data, index) => {
+		return this._dateData.map((data, index) => {
 			const thisDaysDate = new Date(data.date * 1000);
 			const dayOfWeek = thisDaysDate.toLocaleDateString('en-GB', { weekday: 'short' });
 			const dateOfMonth = thisDaysDate.toLocaleDateString('en-GB', { day: 'numeric' });
@@ -168,6 +180,7 @@ export class HiveHeatingStatsCard extends LitElement {
 				day: index === 0 ? `Today` : `${dayOfWeek} ${dateOfMonth}`,
 				timeBlock: timeIntoTimeBlock,
 				totalSeconds: data.value,
+				lineChartPercentage: (data.value / this._maxTime) * 100 * 0.8,
 			};
 		});
 	}
@@ -204,20 +217,20 @@ export class HiveHeatingStatsCard extends LitElement {
 							</tr>
 						</head>
 						<tbody>
-							<tr>
-								${repeat(
-									this._formattedWeeklyData,
-									(data) => data.day,
-									(data, index) => html`
+							${repeat(
+								this._formattedWeeklyData,
+								(data) => data.day,
+								(data, index) => html`
+									<tr>
 										<td class="week-view-day-title">${index === 0 ? `Today` : `${data.day}`}</td>
 										<td class="week-view-day-value">
-											<div class="week-view-day-value-block" style="width: 30%">&nbsp;</div>
+											<div class="week-view-day-value-block" style="width: ${data.lineChartPercentage}%">&nbsp;</div>
 											<div>&nbsp; ${data.timeBlock.hours}h ${data.timeBlock.minutes}m</div>
 										</td>
 										<td class="week-view-day-temperatures"><div>-2&deg; &nbsp; 2&deg;</div></td>
-									`,
-								)}
-							</tr>
+									</tr>
+								`,
+							)}
 						</tbody>
 					</table>
 					<textarea>
