@@ -204,7 +204,7 @@ export class HiveHeatingStatsCard extends LitElement {
 							</tr>
 						</head>
 						<tbody>
-							${this._dataLoaded ? tableInformation : ''}
+							${this._dataLoaded ? html`${tableInformation}` : ''}
 						</tbody>
 					</table>
 					<textarea>
