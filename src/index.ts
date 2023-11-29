@@ -67,7 +67,7 @@ export class HiveHeatingStatsCard extends LitElement {
 		return state !== undefined ? state : defaultValue;
 	}
 
-	async getData() {
+	getData() {
 		const today = new Date();
 		const sevenDaysAgo: Date = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 		const startDate: Date = new Date(
@@ -101,8 +101,12 @@ export class HiveHeatingStatsCard extends LitElement {
 			no_attributes: true,
 			entity_ids: ['sensor.heating_on_today'],
 		};
-		const dataReceived: HassData = await this.hass.callWS(dataRequest);
+		this.hass.callWS(dataRequest).then((data) => {
+			this.processData(data as HassData);
+		});
+	}
 
+	processData(dataReceived: HassData) {
 		for (let i = 0; i < this._dateData.length; i++) {
 			const date = this._dateData[i];
 			const dateData = dataReceived['sensor.heating_on_today'].filter(
