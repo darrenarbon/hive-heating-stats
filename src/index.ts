@@ -118,6 +118,7 @@ export class HiveHeatingStatsCard extends LitElement {
 	}
 
 	processData(dataReceived: HassData) {
+		this._dateData.reverse();
 		for (let i = 0; i < this._dateData.length; i++) {
 			const date = this._dateData[i];
 			const dateData = dataReceived['sensor.heating_on_today'].filter(
