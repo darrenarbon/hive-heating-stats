@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CSSResultGroup, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { repeat } from 'lit/directives/repeat.js';
 import { HomeAssistant } from 'custom-card-helpers';
 import { styles } from './style';
 
@@ -17,6 +18,13 @@ type WeeklyData = {
 	date: number;
 	value: number;
 };
+
+type formattedWeeklyData = {
+	day: string;
+	timeBlock: TimeBlock;
+	totalSeconds: number;
+};
+
 type HassData = {
 	'sensor.heating_on_today': HassDataPoint[];
 };
@@ -49,6 +57,7 @@ export class HiveHeatingStatsCard extends LitElement {
 	private _averageTime: TimeBlock = { hours: 0, minutes: 0 };
 	private _dataLoaded: boolean = false;
 	private _weeklyData: any;
+	private _formattedWeeklyData: formattedWeeklyData[] = [];
 
 	static get styles(): CSSResultGroup {
 		return styles;
@@ -120,7 +129,7 @@ export class HiveHeatingStatsCard extends LitElement {
 		}
 		this._totalTime = this.calculateTotalTime();
 		this._averageTime = this.calculateAverageTime();
-		this._weeklyData = this.createDayHtml();
+		this._weeklyData = this.createFormattedData();
 	}
 
 	calculateTotalTime(): TimeBlock {
@@ -149,32 +158,23 @@ export class HiveHeatingStatsCard extends LitElement {
 		return { hours, minutes };
 	}
 
-	createDayHtml() {
-		if (this._dataLoaded === true) {
-			const html = this._dateData.map((data, index) => {
-				const thisDaysDate = new Date(data.date * 1000);
-				const dayOfWeek = thisDaysDate.toLocaleDateString('en-GB', { weekday: 'short' });
-				const dateOfMonth = thisDaysDate.toLocaleDateString('en-GB', { day: 'numeric' });
-				const timeIntoTimeBlock = this.convertDecimalToTimeBlockObject(data.value);
-				return `
-				<tr>
-					<td class="week-view-day-title">${index === 0 ? `Today` : `${dayOfWeek} ${dateOfMonth}`}</td>
-					<td class="week-view-day-value">
-						<div class="week-view-day-value-block" style="width: 30%">&nbsp;</div>
-						<div>&nbsp; ${timeIntoTimeBlock.hours}h ${timeIntoTimeBlock.minutes}m</div>
-					</td>
-					<td class="week-view-day-temperatures"><div>-2&deg; &nbsp; 2&deg;</div></td>
-				</tr>
-			`;
-			});
-			return `${html.join('')}`;
-		}
+	createFormattedData() {
+		this._formattedWeeklyData = this._dateData.map((data, index) => {
+			const thisDaysDate = new Date(data.date * 1000);
+			const dayOfWeek = thisDaysDate.toLocaleDateString('en-GB', { weekday: 'short' });
+			const dateOfMonth = thisDaysDate.toLocaleDateString('en-GB', { day: 'numeric' });
+			const timeIntoTimeBlock = this.convertDecimalToTimeBlockObject(data.value);
+			return {
+				day: index === 0 ? `Today` : `${dayOfWeek} ${dateOfMonth}`,
+				timeBlock: timeIntoTimeBlock,
+				totalSeconds: data.value,
+			};
+		});
 	}
 
 	render() {
 		const sensorInformation = this.getState('sensor.heating_on_today');
 		this.getData();
-		const tableInformation = html`${this._weeklyData}`;
 		return html`
 			<div class="ha-card">
 				<div class="container card">
@@ -204,7 +204,20 @@ export class HiveHeatingStatsCard extends LitElement {
 							</tr>
 						</head>
 						<tbody>
-							${this._dataLoaded ? html`${tableInformation}` : ''}
+							<tr>
+								${repeat(
+									this._formattedWeeklyData,
+									(data) => data.day,
+									(data, index) => html`
+										<td class="week-view-day-title">${index === 0 ? `Today` : `${data.day}`}</td>
+										<td class="week-view-day-value">
+											<div class="week-view-day-value-block" style="width: 30%">&nbsp;</div>
+											<div>&nbsp; ${data.timeBlock.hours}h ${data.timeBlock.minutes}m</div>
+										</td>
+										<td class="week-view-day-temperatures"><div>-2&deg; &nbsp; 2&deg;</div></td>
+									`,
+								)}
+							</tr>
 						</tbody>
 					</table>
 					<textarea>
