@@ -48,6 +48,7 @@ export class HiveHeatingStatsCard extends LitElement {
 	private _totalTime: TimeBlock = { hours: 0, minutes: 0 };
 	private _averageTime: TimeBlock = { hours: 0, minutes: 0 };
 	private _dataLoaded: boolean = false;
+	private _weeklyData: any;
 
 	static get styles(): CSSResultGroup {
 		return styles;
@@ -120,6 +121,7 @@ export class HiveHeatingStatsCard extends LitElement {
 		console.log(this._dateData);
 		this._totalTime = this.calculateTotalTime(this._dateData);
 		this._averageTime = this.calculateAverageTime(this._dateData);
+		this._weeklyData = this.createDayHtml(this._dateData);
 
 		this._dataLoaded = true;
 	}
@@ -173,52 +175,45 @@ export class HiveHeatingStatsCard extends LitElement {
 	render() {
 		const sensorInformation = this.getState('sensor.heating_on_today');
 		this.getData();
-		return !this._dataLoaded
-			? html`<div class="ha-card">
-					<div class="container card">
-						<h1>Heating History</h1>
-						<p>Data Loading</p>
-					</div>
-			  </div>`
-			: html`
-					<div class="ha-card">
-						<div class="container card">
-							<h1>Heating History</h1>
+		return html`
+			<div class="ha-card">
+				<div class="container card">
+					<h1>Heating History</h1>
 
-							<div class="grey-box">
-								<div class="grey-box-half">
-									Total
-									<div class="grey-box-units">
-										<span>${this._totalTime.hours}</span>h <span>${this._totalTime.minutes}</span>m
-									</div>
-								</div>
-								<div class="grey-box-half">
-									Avg per day
-									<div class="grey-box-units">
-										<span>${this._averageTime.hours}</span>h <span>${this._averageTime.minutes}</span>m
-									</div>
-								</div>
+					<div class="grey-box">
+						<div class="grey-box-half">
+							Total
+							<div class="grey-box-units">
+								<span>${this._totalTime.hours}</span>h <span>${this._totalTime.minutes}</span>m
 							</div>
-							<br />
-							<table class="week-view">
-								<head>
-									<tr>
-										<th class="week-view-day-title">Day</th>
-										<th class="week-view-day-value">Time</th>
-										<th class="week-view-day-temperatures">Min Max</th>
-									</tr>
-								</head>
-								<tbody>
-									${this.createDayHtml(this._dateData)}
-								</tbody>
-							</table>
-							<textarea>
-                        ${JSON.stringify(sensorInformation)}
-                    </textarea
-							>
+						</div>
+						<div class="grey-box-half">
+							Avg per day
+							<div class="grey-box-units">
+								<span>${this._averageTime.hours}</span>h <span>${this._averageTime.minutes}</span>m
+							</div>
 						</div>
 					</div>
-			  `;
+					<br />
+					<table class="week-view">
+						<head>
+							<tr>
+								<th class="week-view-day-title">Day</th>
+								<th class="week-view-day-value">Time</th>
+								<th class="week-view-day-temperatures">Min Max</th>
+							</tr>
+						</head>
+						<tbody>
+							${this._weeklyData}
+						</tbody>
+					</table>
+					<textarea>
+                        ${JSON.stringify(sensorInformation)}
+                    </textarea
+					>
+				</div>
+			</div>
+		`;
 	}
 }
 
