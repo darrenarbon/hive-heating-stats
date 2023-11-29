@@ -4,10 +4,49 @@ import { customElement, property } from 'lit/decorators.js';
 import { HomeAssistant } from 'custom-card-helpers';
 import { styles } from './style';
 
+console.groupCollapsed(
+	`%c ⚡ HIVE-HEATING-STATS-CARD %c Version: 0.0.11 `,
+	'color: orange; font-weight: bold; background: black',
+	'color: white; font-weight: bold; background: dimgray',
+);
+console.log('Readme:', 'https://github.com/');
+console.groupEnd();
+
+type WeeklyData = {
+	label: string;
+	date: number;
+	value: number;
+};
+type HassData = {
+	'sensor.heating_on_today': HassDataPoint[];
+};
+
+type HassDataPoint = {
+	lu: number;
+	s: string;
+};
+
+type HassRequest = {
+	type: string;
+	start_time: string;
+	end_time: string;
+	minimal_response: boolean;
+	no_attributes: boolean;
+	entity_ids: string[];
+};
+
+type TimeBlock = {
+	hours: number;
+	minutes: number;
+};
 @customElement('hive-heating-stats-card')
 export class HiveHeatingStatsCard extends LitElement {
 	@property() public hass!: HomeAssistant;
 	@property() private _config!: any;
+
+	private _dateData: WeeklyData[] = [];
+	private _totalTime: TimeBlock = { hours: 0, minutes: 0 };
+	private _averageTime: TimeBlock = { hours: 0, minutes: 0 };
 
 	static get styles(): CSSResultGroup {
 		return styles;
@@ -42,7 +81,7 @@ export class HiveHeatingStatsCard extends LitElement {
 		const endDate: Date = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
 
 		const sevenDaysAgoStripped = startDate.getTime() / 1000;
-		const dates = [
+		this._dateData = [
 			{ label: '-7d', date: sevenDaysAgoStripped, value: 0 },
 			{ label: '-6d', date: sevenDaysAgoStripped + 86400, value: 0 },
 			{ label: '-5d', date: sevenDaysAgoStripped + 86400 * 2, value: 0 },
@@ -53,7 +92,7 @@ export class HiveHeatingStatsCard extends LitElement {
 			{ label: 'Today', date: sevenDaysAgoStripped + 86400 * 7, value: 0 },
 		];
 
-		const dataRequest = {
+		const dataRequest: HassRequest = {
 			type: 'history/history_during_period',
 			start_time: startDate.toISOString(),
 			end_time: endDate.toISOString(),
@@ -61,19 +100,47 @@ export class HiveHeatingStatsCard extends LitElement {
 			no_attributes: true,
 			entity_ids: ['sensor.heating_on_today'],
 		};
-		const dataReceived: any = await this.hass.callWS(dataRequest);
-		console.log(dataReceived);
-		for (let i = 0; i < dates.length; i++) {
-			const date = dates[i];
+		const dataReceived: HassData = await this.hass.callWS(dataRequest);
+
+		for (let i = 0; i < this._dateData.length; i++) {
+			const date = this._dateData[i];
 			const dateData = dataReceived['sensor.heating_on_today'].filter(
-				(d) => d.lu > date.date && d.lu < date.date + 86400,
+				(d: HassDataPoint) => d.lu > date.date && d.lu < date.date + 86400,
 			);
 			const maxValue: string | null = dateData[dateData.length - 1].s;
 			if (dateData.length > 0 && maxValue !== null) {
 				date.value = Number(maxValue);
 			}
 		}
-		console.log(dates);
+		console.log(this._dateData);
+		this._totalTime = this.calculateTotalTime(this._dateData);
+		this._averageTime = this.calculateAverageTime(this._dateData);
+	}
+
+	calculateTotalTime(weeklyData: WeeklyData[]): TimeBlock {
+		let totalTime = 0;
+		weeklyData.forEach((data) => {
+			totalTime += data.value;
+		});
+		return this.convertDecimalToTimeBlockObject(totalTime);
+	}
+
+	calculateAverageTime(weeklyData: WeeklyData[]): TimeBlock {
+		let totalTime = 0;
+		weeklyData.forEach((data) => {
+			totalTime += data.value;
+		});
+		return this.convertDecimalToTimeBlockObject(totalTime / weeklyData.length);
+	}
+
+	convertDecimalToMinutes(decimal: number) {
+		return decimal * 60;
+	}
+
+	convertDecimalToTimeBlockObject(decimal: number) {
+		const hours = Math.floor(decimal);
+		const minutes = this.convertDecimalToMinutes(decimal - hours);
+		return { hours, minutes };
 	}
 
 	render() {
@@ -87,11 +154,17 @@ export class HiveHeatingStatsCard extends LitElement {
                     <div class="grey-box">
                         <div class="grey-box-half">
                             Total
-                            <div class="grey-box-units"><span>30</span>h <span>29</span>m</div>
+                            <div class="grey-box-units">
+                                <span>${this._totalTime.hours}</span>h
+                                <span>${this._totalTime.minutes}</span>m
+                            </div>
                         </div>
                         <div class="grey-box-half">
                             Avg per day
-                            <div class="grey-box-units"><span>5</span>h <span>12</span>m</div>
+                            <div class="grey-box-units">
+                                <span>${this._averageTime.hours}</span>h
+                                <span>${this._averageTime.minutes}</span>m
+                            </div>
                         </div>
                     </div>
                     <br />
