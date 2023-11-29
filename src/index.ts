@@ -103,6 +103,7 @@ export class HiveHeatingStatsCard extends LitElement {
 			entity_ids: ['sensor.heating_on_today'],
 		};
 		this.hass.callWS(dataRequest).then((data) => {
+			this._dataLoaded = true;
 			this.processData(data as HassData);
 		});
 	}
@@ -122,8 +123,6 @@ export class HiveHeatingStatsCard extends LitElement {
 		this._totalTime = this.calculateTotalTime();
 		this._averageTime = this.calculateAverageTime();
 		this._weeklyData = this.createDayHtml();
-
-		this._dataLoaded = true;
 	}
 
 	calculateTotalTime(): TimeBlock {
@@ -153,12 +152,13 @@ export class HiveHeatingStatsCard extends LitElement {
 	}
 
 	createDayHtml() {
-		const html = this._dateData.map((data, index) => {
-			const thisDaysDate = new Date(data.date * 1000);
-			const dayOfWeek = thisDaysDate.toLocaleDateString('en-GB', { weekday: 'short' });
-			const dateOfMonth = thisDaysDate.toLocaleDateString('en-GB', { day: 'numeric' });
-			const timeIntoTimeBlock = this.convertDecimalToTimeBlockObject(data.value);
-			return `
+		if (this._dataLoaded === true) {
+			const html = this._dateData.map((data, index) => {
+				const thisDaysDate = new Date(data.date * 1000);
+				const dayOfWeek = thisDaysDate.toLocaleDateString('en-GB', { weekday: 'short' });
+				const dateOfMonth = thisDaysDate.toLocaleDateString('en-GB', { day: 'numeric' });
+				const timeIntoTimeBlock = this.convertDecimalToTimeBlockObject(data.value);
+				return `
 				<tr>
 					<td class="week-view-day-title">${index === 0 ? html`Today` : html`${dayOfWeek} ${dateOfMonth}`}</td>
 					<td class="week-view-day-value">
@@ -168,8 +168,9 @@ export class HiveHeatingStatsCard extends LitElement {
 					<td class="week-view-day-temperatures"><div>-2&deg; &nbsp; 2&deg;</div></td>
 				</tr>
 			`;
-		});
-		return html`${html.join('')}`;
+			});
+			return html`${html.join('')}`;
+		}
 	}
 
 	render() {
