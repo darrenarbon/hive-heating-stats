@@ -158,7 +158,7 @@ export class HiveHeatingStatsCard extends LitElement {
 			const dayOfWeek = thisDaysDate.toLocaleDateString('en-GB', { weekday: 'short' });
 			const dateOfMonth = thisDaysDate.toLocaleDateString('en-GB', { day: 'numeric' });
 			const timeIntoTimeBlock = this.convertDecimalToTimeBlockObject(data.value);
-			return html`
+			return `
 				<tr>
 					<td class="week-view-day-title">${index === 0 ? html`Today` : html`${dayOfWeek} ${dateOfMonth}`}</td>
 					<td class="week-view-day-value">
@@ -169,7 +169,7 @@ export class HiveHeatingStatsCard extends LitElement {
 				</tr>
 			`;
 		});
-		return html;
+		return html`${html.join('')}`;
 	}
 
 	render() {
