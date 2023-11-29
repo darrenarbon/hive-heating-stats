@@ -93,14 +93,14 @@ export class HiveHeatingStatsCard extends LitElement {
 
 		const sevenDaysAgoStripped = startDate.getTime() / 1000;
 		this._dateData = [
-			{ label: '-7d', date: sevenDaysAgoStripped, value: 0 },
-			{ label: '-6d', date: sevenDaysAgoStripped + 86400, value: 0 },
-			{ label: '-5d', date: sevenDaysAgoStripped + 86400 * 2, value: 0 },
-			{ label: '-4d', date: sevenDaysAgoStripped + 86400 * 3, value: 0 },
-			{ label: '-3d', date: sevenDaysAgoStripped + 86400 * 4, value: 0 },
-			{ label: '-2d', date: sevenDaysAgoStripped + 86400 * 5, value: 0 },
-			{ label: '-1d', date: sevenDaysAgoStripped + 86400 * 6, value: 0 },
 			{ label: 'Today', date: sevenDaysAgoStripped + 86400 * 7, value: 0 },
+			{ label: '-1d', date: sevenDaysAgoStripped + 86400 * 6, value: 0 },
+			{ label: '-2d', date: sevenDaysAgoStripped + 86400 * 5, value: 0 },
+			{ label: '-3d', date: sevenDaysAgoStripped + 86400 * 4, value: 0 },
+			{ label: '-4d', date: sevenDaysAgoStripped + 86400 * 3, value: 0 },
+			{ label: '-5d', date: sevenDaysAgoStripped + 86400 * 2, value: 0 },
+			{ label: '-6d', date: sevenDaysAgoStripped + 86400, value: 0 },
+			{ label: '-7d', date: sevenDaysAgoStripped, value: 0 },
 		];
 
 		const dataRequest: HassRequest = {
@@ -118,7 +118,6 @@ export class HiveHeatingStatsCard extends LitElement {
 	}
 
 	processData(dataReceived: HassData) {
-		this._dateData = this._dateData.reverse();
 		for (let i = 0; i < this._dateData.length; i++) {
 			const date = this._dateData[i];
 			const dateData = dataReceived['sensor.heating_on_today'].filter(
