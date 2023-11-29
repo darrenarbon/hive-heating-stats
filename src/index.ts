@@ -119,27 +119,27 @@ export class HiveHeatingStatsCard extends LitElement {
 			}
 		}
 		console.log(this._dateData);
-		this._totalTime = this.calculateTotalTime(this._dateData);
-		this._averageTime = this.calculateAverageTime(this._dateData);
-		this._weeklyData = this.createDayHtml(this._dateData);
+		this._totalTime = this.calculateTotalTime();
+		this._averageTime = this.calculateAverageTime();
+		this._weeklyData = this.createDayHtml();
 
 		this._dataLoaded = true;
 	}
 
-	calculateTotalTime(weeklyData: WeeklyData[]): TimeBlock {
+	calculateTotalTime(): TimeBlock {
 		let totalTime = 0;
-		weeklyData.forEach((data) => {
+		this._dateData.forEach((data) => {
 			totalTime += data.value;
 		});
 		return this.convertDecimalToTimeBlockObject(totalTime);
 	}
 
-	calculateAverageTime(weeklyData: WeeklyData[]): TimeBlock {
+	calculateAverageTime(): TimeBlock {
 		let totalTime = 0;
-		weeklyData.forEach((data) => {
+		this._dateData.forEach((data) => {
 			totalTime += data.value;
 		});
-		return this.convertDecimalToTimeBlockObject(totalTime / weeklyData.length);
+		return this.convertDecimalToTimeBlockObject(totalTime / this._dateData.length);
 	}
 
 	convertDecimalToMinutes(decimal: number) {
@@ -152,8 +152,8 @@ export class HiveHeatingStatsCard extends LitElement {
 		return { hours, minutes };
 	}
 
-	createDayHtml(weeklyData: WeeklyData[]) {
-		const html = weeklyData.map((data, index) => {
+	createDayHtml() {
+		const html = this._dateData.map((data, index) => {
 			const thisDaysDate = new Date(data.date * 1000);
 			const dayOfWeek = thisDaysDate.toLocaleDateString('en-GB', { weekday: 'short' });
 			const dateOfMonth = thisDaysDate.toLocaleDateString('en-GB', { day: 'numeric' });
