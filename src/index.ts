@@ -47,7 +47,7 @@ export class HiveHeatingStatsCard extends LitElement {
 			end_time: endDate.toISOString(),
 			minimal_response: true,
 			no_attributes: true,
-			entity_ids: 'sensor.heating_on_today',
+			entity_ids: ['sensor.heating_on_today'],
 		};
 		const dataReceived = await this.hass.callWS(dataRequest);
 		console.log('in function', dataReceived);
