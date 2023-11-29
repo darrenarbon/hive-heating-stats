@@ -160,7 +160,7 @@ export class HiveHeatingStatsCard extends LitElement {
 				const timeIntoTimeBlock = this.convertDecimalToTimeBlockObject(data.value);
 				return `
 				<tr>
-					<td class="week-view-day-title">${index === 0 ? html`Today` : html`${dayOfWeek} ${dateOfMonth}`}</td>
+					<td class="week-view-day-title">${index === 0 ? `Today` : `${dayOfWeek} ${dateOfMonth}`}</td>
 					<td class="week-view-day-value">
 						<div class="week-view-day-value-block" style="width: 30%">&nbsp;</div>
 						<div>&nbsp; ${timeIntoTimeBlock.hours}h ${timeIntoTimeBlock.minutes}m</div>
@@ -169,7 +169,7 @@ export class HiveHeatingStatsCard extends LitElement {
 				</tr>
 			`;
 			});
-			return html`${html.join('')}`;
+			return `${html.join('')}`;
 		}
 	}
 
