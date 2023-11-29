@@ -17,6 +17,8 @@ type WeeklyData = {
 	label: string;
 	date: number;
 	value: number;
+	minTemp: number;
+	maxTemp: number;
 };
 
 type formattedWeeklyData = {
@@ -24,10 +26,13 @@ type formattedWeeklyData = {
 	timeBlock: TimeBlock;
 	totalSeconds: number;
 	lineChartPercentage: number;
+	minTemp: number;
+	maxTemp: number;
 };
 
 type HassData = {
 	'sensor.heating_on_today': HassDataPoint[];
+	'sensor.openweathermap_temperature': HassDataPoint[];
 };
 
 type HassDataPoint = {
@@ -93,14 +98,14 @@ export class HiveHeatingStatsCard extends LitElement {
 
 		const sevenDaysAgoStripped = startDate.getTime() / 1000;
 		this._dateData = [
-			{ label: 'Today', date: sevenDaysAgoStripped + 86400 * 7, value: 0 },
-			{ label: '-1d', date: sevenDaysAgoStripped + 86400 * 6, value: 0 },
-			{ label: '-2d', date: sevenDaysAgoStripped + 86400 * 5, value: 0 },
-			{ label: '-3d', date: sevenDaysAgoStripped + 86400 * 4, value: 0 },
-			{ label: '-4d', date: sevenDaysAgoStripped + 86400 * 3, value: 0 },
-			{ label: '-5d', date: sevenDaysAgoStripped + 86400 * 2, value: 0 },
-			{ label: '-6d', date: sevenDaysAgoStripped + 86400, value: 0 },
-			{ label: '-7d', date: sevenDaysAgoStripped, value: 0 },
+			{ label: 'Today', date: sevenDaysAgoStripped + 86400 * 7, value: 0, minTemp: 0, maxTemp: 0 },
+			{ label: '-1d', date: sevenDaysAgoStripped + 86400 * 6, value: 0, minTemp: 0, maxTemp: 0 },
+			{ label: '-2d', date: sevenDaysAgoStripped + 86400 * 5, value: 0, minTemp: 0, maxTemp: 0 },
+			{ label: '-3d', date: sevenDaysAgoStripped + 86400 * 4, value: 0, minTemp: 0, maxTemp: 0 },
+			{ label: '-4d', date: sevenDaysAgoStripped + 86400 * 3, value: 0, minTemp: 0, maxTemp: 0 },
+			{ label: '-5d', date: sevenDaysAgoStripped + 86400 * 2, value: 0, minTemp: 0, maxTemp: 0 },
+			{ label: '-6d', date: sevenDaysAgoStripped + 86400, value: 0, minTemp: 0, maxTemp: 0 },
+			{ label: '-7d', date: sevenDaysAgoStripped, value: 0, minTemp: 0, maxTemp: 0 },
 		];
 
 		const dataRequest: HassRequest = {
@@ -109,7 +114,7 @@ export class HiveHeatingStatsCard extends LitElement {
 			end_time: endDate.toISOString(),
 			minimal_response: true,
 			no_attributes: true,
-			entity_ids: ['sensor.heating_on_today'],
+			entity_ids: ['sensor.heating_on_today', 'sensor.openweathermap_temperature'],
 		};
 		this.hass.callWS(dataRequest).then((data) => {
 			this._dataLoaded = true;
@@ -120,12 +125,21 @@ export class HiveHeatingStatsCard extends LitElement {
 	processData(dataReceived: HassData) {
 		for (let i = 0; i < this._dateData.length; i++) {
 			const date = this._dateData[i];
+			// process heating data first
 			const dateData = dataReceived['sensor.heating_on_today'].filter(
 				(d: HassDataPoint) => d.lu > date.date && d.lu < date.date + 86400,
 			);
+			const tempData = dataReceived['sensor.openweathermap_temperature'].filter(
+				(d: HassDataPoint) => d.lu > date.date && d.lu < date.date + 86400,
+			);
+			// find the max value for the day from the lu property
+			const minTemp = Math.min(...tempData.map((item) => Number(item.s)));
+			const maxTemp = Math.max(...tempData.map((item) => Number(item.s)));
 			const maxValue: string | null = dateData[dateData.length - 1].s;
-			if (dateData.length > 0 && maxValue !== null) {
+			if (dateData.length > 0 && maxValue !== null && minTemp !== null && maxTemp !== null) {
 				date.value = Number(maxValue);
+				date.minTemp = minTemp;
+				date.maxTemp = maxTemp;
 			}
 		}
 		this._totalTime = this.calculateTotalTime();
@@ -181,12 +195,13 @@ export class HiveHeatingStatsCard extends LitElement {
 				timeBlock: timeIntoTimeBlock,
 				totalSeconds: data.value,
 				lineChartPercentage: (data.value / this._maxTime) * 100 * 0.8,
+				minTemp: data.minTemp,
+				maxTemp: data.maxTemp,
 			};
 		});
 	}
 
 	render() {
-		const sensorInformation = this.getState('sensor.heating_on_today');
 		this.getData();
 		return html`
 			<div class="ha-card">
@@ -227,16 +242,14 @@ export class HiveHeatingStatsCard extends LitElement {
 											<div class="week-view-day-value-block" style="width: ${data.lineChartPercentage}%">&nbsp;</div>
 											<div>&nbsp; ${data.timeBlock.hours}h ${data.timeBlock.minutes}m</div>
 										</td>
-										<td class="week-view-day-temperatures"><div>-2&deg; &nbsp; 2&deg;</div></td>
+										<td class="week-view-day-temperatures">
+											<div>${data.minTemp}&deg; &nbsp; ${data.maxTemp}&deg;</div>
+										</td>
 									</tr>
 								`,
 							)}
 						</tbody>
 					</table>
-					<textarea>
-                        ${JSON.stringify(sensorInformation)}
-                    </textarea
-					>
 				</div>
 			</div>
 		`;
