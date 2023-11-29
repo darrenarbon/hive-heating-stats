@@ -139,106 +139,72 @@ export class HiveHeatingStatsCard extends LitElement {
 
 	convertDecimalToTimeBlockObject(decimal: number) {
 		const hours = Math.floor(decimal);
-		const minutes = this.convertDecimalToMinutes(decimal - hours);
+		const minutes = Math.floor(this.convertDecimalToMinutes(decimal - hours));
 		return { hours, minutes };
+	}
+
+	createDayHtml(weeklyData: WeeklyData[]) {
+		const html = weeklyData.map((data, index) => {
+			const thisDaysDate = new Date(data.date * 1000);
+			const dayOfWeek = thisDaysDate.toLocaleDateString('en-GB', { weekday: 'short' });
+			const dateOfMonth = thisDaysDate.toLocaleDateString('en-GB', { day: 'numeric' });
+			const timeIntoTimeBlock = this.convertDecimalToTimeBlockObject(data.value);
+			return html`
+				<tr>
+					<td class="week-view-day-title">${index === 0 ? html`Today` : html`${dayOfWeek} ${dateOfMonth}`}</td>
+					<td class="week-view-day-value">
+						<div class="week-view-day-value-block" style="width: 30%">&nbsp;</div>
+						<div>&nbsp; ${timeIntoTimeBlock.hours}h ${timeIntoTimeBlock.minutes}m</div>
+					</td>
+					<td class="week-view-day-temperatures"><div>-2&deg; &nbsp; 2&deg;</div></td>
+				</tr>
+			`;
+		});
+		return html;
 	}
 
 	render() {
 		const sensorInformation = this.getState('sensor.heating_on_today');
 		this.getData();
 		return html`
-            <div class="ha-card">
-                <div class="container card">
-                    <h1>Heating History</h1>
+			<div class="ha-card">
+				<div class="container card">
+					<h1>Heating History</h1>
 
-                    <div class="grey-box">
-                        <div class="grey-box-half">
-                            Total
-                            <div class="grey-box-units">
-                                <span>${this._totalTime.hours}</span>h
-                                <span>${this._totalTime.minutes}</span>m
-                            </div>
-                        </div>
-                        <div class="grey-box-half">
-                            Avg per day
-                            <div class="grey-box-units">
-                                <span>${this._averageTime.hours}</span>h
-                                <span>${this._averageTime.minutes}</span>m
-                            </div>
-                        </div>
-                    </div>
-                    <br />
-                    <table class="week-view">
-                        <head>
-                            <tr>
-                                <th class="week-view-day-title">Day</th>
-                                <th class="week-view-day-value">Time</th>
-                                <th class="week-view-day-temperatures">Min Max</th>
-                            </tr>
-                        </head>
-                        <tr>
-                            <td class="week-view-day-title">Today</td>
-                            <td class="week-view-day-value">
-                                <div class="week-view-day-value-block MAX-WIDTH-IS-80" style="width: 80%">&nbsp;</div>
-                                <div>&nbsp; 3h 04m</div>
-                            </td>
-                            <td class="week-view-day-temperatures"><div>-2&deg; &nbsp; 2&deg;</div></td>
-                        </tr>
-                        <tr>
-                            <td class="week-view-day-title">Thu 22</td>
-                            <td class="week-view-day-value">
-                                <div class="week-view-day-value-block" style="width: 40%">&nbsp;</div>
-                                <div>&nbsp; 1h 34m</div>
-                            </td>
-                            <td class="week-view-day-temperatures"><div>1&deg; &nbsp; 12&deg;</div></td></td>
-                        </tr>
-                        <tr>
-                            <td class="week-view-day-title">Wed 21</td>
-                            <td class="week-view-day-value">
-                                <div class="week-view-day-value-block" style="width: 20%">&nbsp;</div>
-                                <div>&nbsp; 0h 46m</div>
-                            </td>
-                            <td class="week-view-day-temperatures"><div>8&deg; &nbsp; 13&deg;</div></td></td>
-                        </tr>
-                        <tr>
-                            <td class="week-view-day-title">Tue 20</td>
-                            <td class="week-view-day-value">
-                                <div class="week-view-day-value-block" style="width: 25%">&nbsp;</div>
-                                <div>&nbsp; 0h 56m</div>
-                            </td>
-                            <td class="week-view-day-temperatures"><div>8&deg; &nbsp; 13&deg;</div></td></td>
-                        </tr>
-                        <tr>
-                            <td class="week-view-day-title">Mon 19</td>
-                            <td class="week-view-day-value">
-                                <div class="week-view-day-value-block" style="width: 74%">&nbsp;</div>
-                                <div>&nbsp; 2h 48m</div>
-                            </td>
-                            <td class="week-view-day-temperatures"><div>-2&deg; &nbsp; 3&deg;</div></td></td>
-                        </tr>
-                        <tr>
-                            <td class="week-view-day-title">Sun 18</td>
-                            <td class="week-view-day-value">
-                                <div class="week-view-day-value-block" style="width: 66%">&nbsp;</div>
-                                <div>&nbsp; 2h 34m</div>
-                            </td>
-                            <td class="week-view-day-temperatures"><div>-2&deg; &nbsp; 8&deg;</div></td></td>
-                        </tr>
-                        <tr>
-                            <td class="week-view-day-title">Sat 17</td>
-                            <td class="week-view-day-value">
-                                <div class="week-view-day-value-block" style="width: 64%">&nbsp;</div>
-                                <div>&nbsp; 2h 24m</div>
-                            </td>
-                            <td class="week-view-day-temperatures"><div>-2&deg; &nbsp; 9&deg;</div></td></td>
-                        </tr>
-                    </table>
-                    <textarea>
+					<div class="grey-box">
+						<div class="grey-box-half">
+							Total
+							<div class="grey-box-units">
+								<span>${this._totalTime.hours}</span>h <span>${this._totalTime.minutes}</span>m
+							</div>
+						</div>
+						<div class="grey-box-half">
+							Avg per day
+							<div class="grey-box-units">
+								<span>${this._averageTime.hours}</span>h <span>${this._averageTime.minutes}</span>m
+							</div>
+						</div>
+					</div>
+					<br />
+					<table class="week-view">
+						<head>
+							<tr>
+								<th class="week-view-day-title">Day</th>
+								<th class="week-view-day-value">Time</th>
+								<th class="week-view-day-temperatures">Min Max</th>
+							</tr>
+						</head>
+						<tbody>
+							${this.createDayHtml(this._dateData)}
+						</tbody>
+					</table>
+					<textarea>
                         ${JSON.stringify(sensorInformation)}
-                    </textarea>
-                </div>
-            </div>
-        `;
+                    </textarea
+					>
+				</div>
+			</div>
+		`;
 	}
 }
 
