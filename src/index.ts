@@ -61,11 +61,11 @@ export class HiveHeatingStatsCard extends LitElement {
 			no_attributes: true,
 			entity_ids: ['sensor.heating_on_today'],
 		};
-		const dataReceived: any[] = await this.hass.callWS(dataRequest);
+		const dataReceived: any = await this.hass.callWS(dataRequest);
 		console.log(dataReceived);
 		for (let i = 0; i < dates.length; i++) {
 			const date = dates[i];
-			const dateData = dataReceived.filter((d) => d.lu > date.date && d.lu < date.date + 86400);
+			const dateData = dataReceived.sensor.heating_on_today.filter((d) => d.lu > date.date && d.lu < date.date + 86400);
 			const maxValue: string | null = dateData[dateData.length - 1].s;
 			if (dateData.length > 0 && maxValue !== null) {
 				date.value = Number(maxValue);
