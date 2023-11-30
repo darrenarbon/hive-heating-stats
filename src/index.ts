@@ -133,8 +133,8 @@ export class HiveHeatingStatsCard extends LitElement {
 				(d: HassDataPoint) => d.lu > date.date && d.lu < date.date + 86400,
 			);
 			// find the max value for the day from the lu property
-			const minTemp = Math.min(...tempData.map((item) => Number(item.s)));
-			const maxTemp = Math.max(...tempData.map((item) => Number(item.s)));
+			const minTemp = Math.min(...tempData.map((item) => (isNaN(Number(item.s)) ? 0 : Number(item.s))));
+			const maxTemp = Math.max(...tempData.map((item) => (isNaN(Number(item.s)) ? 0 : Number(item.s))));
 			const maxValue: string | null = dateData[dateData.length - 1].s;
 			if (dateData.length > 0 && maxValue !== null && minTemp !== null && maxTemp !== null) {
 				date.value = Number(maxValue);
