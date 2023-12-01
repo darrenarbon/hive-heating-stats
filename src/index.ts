@@ -57,11 +57,11 @@ type TimeBlock = {
 export class HiveHeatingStatsCard extends LitElement {
 	@property() public hass!: HomeAssistant;
 	@property() private _config!: any;
+	@property() private _dataLoaded: boolean = false;
 
 	private _dateData: WeeklyData[] = [];
 	private _totalTime: TimeBlock = { hours: 0, minutes: 0 };
 	private _averageTime: TimeBlock = { hours: 0, minutes: 0 };
-	private _dataLoaded: boolean = false;
 	private _formattedWeeklyData: formattedWeeklyData[] = [];
 	private _maxTime: number = 0;
 
@@ -117,7 +117,6 @@ export class HiveHeatingStatsCard extends LitElement {
 			entity_ids: ['sensor.heating_on_today', 'sensor.openweathermap_temperature'],
 		};
 		this.hass.callWS(dataRequest).then((data) => {
-			this._dataLoaded = true;
 			this.processData(data as HassData);
 		});
 	}
@@ -146,6 +145,7 @@ export class HiveHeatingStatsCard extends LitElement {
 		this._averageTime = this.calculateAverageTime();
 		this._maxTime = this.calculateMaxTime();
 		this._formattedWeeklyData = this.createFormattedData();
+		this._dataLoaded = true;
 	}
 
 	calculateMaxTime(): number {
@@ -203,56 +203,60 @@ export class HiveHeatingStatsCard extends LitElement {
 
 	render() {
 		this.getData();
-		return html`
-			<div class="ha-card">
-				<div class="container card">
-					<h1>Heating History</h1>
+		return !this._dataLoaded
+			? html`Data Loading...`
+			: html`
+					<div class="ha-card">
+						<div class="container card">
+							<h1>Heating History</h1>
 
-					<div class="grey-box">
-						<div class="grey-box-half">
-							Total
-							<div class="grey-box-units">
-								<span>${this._totalTime.hours}</span>h <span>${this._totalTime.minutes}</span>m
+							<div class="grey-box">
+								<div class="grey-box-half">
+									Total
+									<div class="grey-box-units">
+										<span>${this._totalTime.hours}</span>h <span>${this._totalTime.minutes}</span>m
+									</div>
+								</div>
+								<div class="grey-box-half">
+									Avg per day
+									<div class="grey-box-units">
+										<span>${this._averageTime.hours}</span>h <span>${this._averageTime.minutes}</span>m
+									</div>
+								</div>
 							</div>
-						</div>
-						<div class="grey-box-half">
-							Avg per day
-							<div class="grey-box-units">
-								<span>${this._averageTime.hours}</span>h <span>${this._averageTime.minutes}</span>m
-							</div>
+							<br />
+							<table class="week-view">
+								<head>
+									<tr>
+										<th class="week-view-day-title">Day</th>
+										<th class="week-view-day-value">Time</th>
+										<th class="week-view-day-temperatures">Min Max</th>
+									</tr>
+								</head>
+								<tbody>
+									${repeat(
+										this._formattedWeeklyData,
+										(data) => data.day,
+										(data, index) => html`
+											<tr>
+												<td class="week-view-day-title">${index === 0 ? `Today` : `${data.day}`}</td>
+												<td class="week-view-day-value">
+													<div class="week-view-day-value-block" style="width: ${data.lineChartPercentage}%">
+														&nbsp;
+													</div>
+													<div>&nbsp; ${data.timeBlock.hours}h ${data.timeBlock.minutes}m</div>
+												</td>
+												<td class="week-view-day-temperatures">
+													<div>${data.minTemp}&deg; &nbsp; ${data.maxTemp}&deg;</div>
+												</td>
+											</tr>
+										`,
+									)}
+								</tbody>
+							</table>
 						</div>
 					</div>
-					<br />
-					<table class="week-view">
-						<head>
-							<tr>
-								<th class="week-view-day-title">Day</th>
-								<th class="week-view-day-value">Time</th>
-								<th class="week-view-day-temperatures">Min Max</th>
-							</tr>
-						</head>
-						<tbody>
-							${repeat(
-								this._formattedWeeklyData,
-								(data) => data.day,
-								(data, index) => html`
-									<tr>
-										<td class="week-view-day-title">${index === 0 ? `Today` : `${data.day}`}</td>
-										<td class="week-view-day-value">
-											<div class="week-view-day-value-block" style="width: ${data.lineChartPercentage}%">&nbsp;</div>
-											<div>&nbsp; ${data.timeBlock.hours}h ${data.timeBlock.minutes}m</div>
-										</td>
-										<td class="week-view-day-temperatures">
-											<div>${data.minTemp}&deg; &nbsp; ${data.maxTemp}&deg;</div>
-										</td>
-									</tr>
-								`,
-							)}
-						</tbody>
-					</table>
-				</div>
-			</div>
-		`;
+			  `;
 	}
 }
 
