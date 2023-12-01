@@ -4,91 +4,69 @@ import { customElement, property } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { HomeAssistant } from 'custom-card-helpers';
 import { styles } from './style';
+import {
+	RawData,
+	TimeBlock,
+	FormattedData,
+	HassRequest,
+	HassData,
+	HassDataPoint,
+	HiveHeatingStatsCardConfig,
+	DateRange,
+} from './types';
 
 console.groupCollapsed(
-	`%c ⚡ HIVE-HEATING-STATS-CARD %c Version: 0.0.11 `,
+	`%c 🔥 HIVE-HEATING-STATS-CARD 🔥 %c Version: 0.1.0 `,
 	'color: orange; font-weight: bold; background: black',
 	'color: white; font-weight: bold; background: dimgray',
 );
-console.log('Readme:', 'https://github.com/');
+console.log('Readme:', 'https://github.com/darrenarbon/hive-heating-stats/');
 console.groupEnd();
 
-type WeeklyData = {
-	label: string;
-	date: number;
-	value: number;
-	minTemp: number;
-	maxTemp: number;
-};
-
-type formattedWeeklyData = {
-	day: string;
-	timeBlock: TimeBlock;
-	totalSeconds: number;
-	lineChartPercentage: number;
-	minTemp: number;
-	maxTemp: number;
-};
-
-type HassData = {
-	'sensor.heating_on_today': HassDataPoint[];
-	'sensor.openweathermap_temperature': HassDataPoint[];
-};
-
-type HassDataPoint = {
-	lu: number;
-	s: string;
-};
-
-type HassRequest = {
-	type: string;
-	start_time: string;
-	end_time: string;
-	minimal_response: boolean;
-	no_attributes: boolean;
-	entity_ids: string[];
-};
-
-type TimeBlock = {
-	hours: number;
-	minutes: number;
-};
 @customElement('hive-heating-stats-card')
 export class HiveHeatingStatsCard extends LitElement {
 	@property() public hass!: HomeAssistant;
 	@property() private _config!: any;
 	@property() private _dataLoaded: boolean = false;
 
-	private _dateData: WeeklyData[] = [];
-	private _totalTime: TimeBlock = { hours: 0, minutes: 0 };
-	private _averageTime: TimeBlock = { hours: 0, minutes: 0 };
-	private _formattedWeeklyData: formattedWeeklyData[] = [];
-	private _maxTime: number = 0;
+	private _totalHeatingTime: TimeBlock = { hours: 0, minutes: 0 };
+	private _averageHeatingTime: TimeBlock = { hours: 0, minutes: 0 };
+	private _formattedData: FormattedData[] = [];
+	private _maxHeatingTime: number = 0;
 
 	static get styles(): CSSResultGroup {
 		return styles;
 	}
 
-	static getStubConfig() {
-		return {};
+	static getStubConfig(): HiveHeatingStatsCardConfig {
+		return {
+			entities: {
+				heating: 'sensor.heating_on_today',
+				temperature: 'sensor.openweathermap_temperature',
+			},
+		} as HiveHeatingStatsCardConfig;
 	}
 
-	setConfig(config) {
-		this._config = config;
+	setConfig(config: HiveHeatingStatsCardConfig): void {
+		if (
+			(config && config.entities && !config.entities.heating) ||
+			(config && config.entities && !config.entities.temperature)
+		) {
+			throw Error('Entities are required');
+		}
+
+		const customConfig: HiveHeatingStatsCardConfig = JSON.parse(JSON.stringify(config));
+
+		this._config = customConfig;
 	}
 
-	getState(entity: string, defaultValue?: any) {
-		const state = this.hass.states[entity];
-		return state !== undefined ? state : defaultValue;
-	}
-
-	getData() {
+	getDateRange(daysAgo: number): DateRange {
 		const today = new Date();
-		const sevenDaysAgo: Date = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+		const dateXDaysAgo: Date = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
 		const startDate: Date = new Date(
-			sevenDaysAgo.getFullYear(),
-			sevenDaysAgo.getMonth(),
-			sevenDaysAgo.getDate(),
+			dateXDaysAgo.getFullYear(),
+			dateXDaysAgo.getMonth(),
+			dateXDaysAgo.getDate(),
 			0,
 			0,
 			0,
@@ -96,17 +74,25 @@ export class HiveHeatingStatsCard extends LitElement {
 		);
 		const endDate: Date = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
 
-		const sevenDaysAgoStripped = startDate.getTime() / 1000;
-		this._dateData = [
-			{ label: 'Today', date: sevenDaysAgoStripped + 86400 * 7, value: 0, minTemp: 0, maxTemp: 0 },
-			{ label: '-1d', date: sevenDaysAgoStripped + 86400 * 6, value: 0, minTemp: 0, maxTemp: 0 },
-			{ label: '-2d', date: sevenDaysAgoStripped + 86400 * 5, value: 0, minTemp: 0, maxTemp: 0 },
-			{ label: '-3d', date: sevenDaysAgoStripped + 86400 * 4, value: 0, minTemp: 0, maxTemp: 0 },
-			{ label: '-4d', date: sevenDaysAgoStripped + 86400 * 3, value: 0, minTemp: 0, maxTemp: 0 },
-			{ label: '-5d', date: sevenDaysAgoStripped + 86400 * 2, value: 0, minTemp: 0, maxTemp: 0 },
-			{ label: '-6d', date: sevenDaysAgoStripped + 86400, value: 0, minTemp: 0, maxTemp: 0 },
-			{ label: '-7d', date: sevenDaysAgoStripped, value: 0, minTemp: 0, maxTemp: 0 },
-		];
+		const dateXDaysAgoStripped = startDate.getTime() / 1000;
+
+		const rawData: RawData[] = [];
+
+		for (let i = daysAgo; i > 0; i--) {
+			rawData.push({
+				label: i === daysAgo ? 'Today' : `-${daysAgo - i}d`,
+				date: dateXDaysAgoStripped + 86400 * i,
+				value: 0,
+				minTemp: 0,
+				maxTemp: 0,
+			});
+		}
+
+		return { startDate, endDate, rawData };
+	}
+
+	getData(numberOfDays: number) {
+		const { startDate, endDate, rawData } = this.getDateRange(numberOfDays);
 
 		const dataRequest: HassRequest = {
 			type: 'history/history_during_period',
@@ -114,43 +100,47 @@ export class HiveHeatingStatsCard extends LitElement {
 			end_time: endDate.toISOString(),
 			minimal_response: true,
 			no_attributes: true,
-			entity_ids: ['sensor.heating_on_today', 'sensor.openweathermap_temperature'],
+			entity_ids: [this._config.entities.heating, this._config.entities.temperature],
 		};
 		this.hass.callWS(dataRequest).then((data) => {
-			this.processData(data as HassData);
+			this.processData(data as HassData, rawData);
 		});
 	}
 
-	processData(dataReceived: HassData) {
-		for (let i = 0; i < this._dateData.length; i++) {
-			const date = this._dateData[i];
-			// process heating data first
-			const dateData = dataReceived['sensor.heating_on_today'].filter(
+	processData(dataReceived: HassData, rawData: RawData[]): void {
+		for (let i = 0; i < rawData.length; i++) {
+			const date = rawData[i];
+
+			const daysHeatingData: HassDataPoint[] = dataReceived['sensor.heating_on_today'].filter(
 				(d: HassDataPoint) => d.lu > date.date && d.lu < date.date + 86400,
 			);
-			const tempData = dataReceived['sensor.openweathermap_temperature'].filter(
+
+			const daysTemperatureData: HassDataPoint[] = dataReceived['sensor.openweathermap_temperature'].filter(
 				(d: HassDataPoint) => d.lu > date.date && d.lu < date.date + 86400,
 			);
-			// find the max value for the day from the lu property
-			const minTemp = Math.min(...tempData.map((item) => (isNaN(Number(item.s)) ? 0 : Number(item.s))));
-			const maxTemp = Math.max(...tempData.map((item) => (isNaN(Number(item.s)) ? 0 : Number(item.s))));
-			const maxValue: string | null = dateData[dateData.length - 1].s;
-			if (dateData.length > 0 && maxValue !== null && minTemp !== null && maxTemp !== null) {
-				date.value = Number(maxValue);
+
+			const minTemp = Math.min(...daysTemperatureData.map((item) => (isNaN(Number(item.s)) ? 0 : Number(item.s))));
+			const maxTemp = Math.max(...daysTemperatureData.map((item) => (isNaN(Number(item.s)) ? 0 : Number(item.s))));
+
+			const daysHeatingValue: string | null = daysHeatingData[daysHeatingData.length - 1].s;
+
+			if (daysHeatingData.length > 0 && daysHeatingValue !== null && minTemp !== null && maxTemp !== null) {
+				date.value = Number(daysHeatingValue);
 				date.minTemp = minTemp;
 				date.maxTemp = maxTemp;
 			}
 		}
-		this._totalTime = this.calculateTotalTime();
-		this._averageTime = this.calculateAverageTime();
-		this._maxTime = this.calculateMaxTime();
-		this._formattedWeeklyData = this.createFormattedData();
+
+		this._totalHeatingTime = this.calculateTotalHeatingTime(rawData);
+		this._averageHeatingTime = this.calculateAverageHeatingTime(rawData);
+		this._maxHeatingTime = this.calculateMaxHeatingTime(rawData);
+		this._formattedData = this.createFormattedData(rawData);
 		this._dataLoaded = true;
 	}
 
-	calculateMaxTime(): number {
+	calculateMaxHeatingTime(rawData: RawData[]): number {
 		let maxTime = 0;
-		this._dateData.forEach((data) => {
+		rawData.forEach((data) => {
 			if (data.value > maxTime) {
 				maxTime = data.value;
 			}
@@ -158,34 +148,34 @@ export class HiveHeatingStatsCard extends LitElement {
 		return maxTime;
 	}
 
-	calculateTotalTime(): TimeBlock {
+	calculateTotalHeatingTime(rawData: RawData[]): TimeBlock {
 		let totalTime = 0;
-		this._dateData.forEach((data) => {
+		rawData.forEach((data) => {
 			totalTime += data.value;
 		});
 		return this.convertDecimalToTimeBlockObject(totalTime);
 	}
 
-	calculateAverageTime(): TimeBlock {
+	calculateAverageHeatingTime(rawData: RawData[]): TimeBlock {
 		let totalTime = 0;
-		this._dateData.forEach((data) => {
+		rawData.forEach((data) => {
 			totalTime += data.value;
 		});
-		return this.convertDecimalToTimeBlockObject(totalTime / this._dateData.length);
+		return this.convertDecimalToTimeBlockObject(totalTime / rawData.length);
 	}
 
-	convertDecimalToMinutes(decimal: number) {
+	private convertDecimalToMinutes(decimal: number) {
 		return decimal * 60;
 	}
 
-	convertDecimalToTimeBlockObject(decimal: number) {
+	private convertDecimalToTimeBlockObject(decimal: number) {
 		const hours = Math.floor(decimal);
 		const minutes = Math.floor(this.convertDecimalToMinutes(decimal - hours));
 		return { hours, minutes };
 	}
 
-	createFormattedData() {
-		return this._dateData.map((data, index) => {
+	createFormattedData(rawData: RawData[]) {
+		return rawData.map((data, index) => {
 			const thisDaysDate = new Date(data.date * 1000);
 			const dayOfWeek = thisDaysDate.toLocaleDateString('en-GB', { weekday: 'short' });
 			const dateOfMonth = thisDaysDate.toLocaleDateString('en-GB', { day: 'numeric' });
@@ -194,7 +184,7 @@ export class HiveHeatingStatsCard extends LitElement {
 				day: index === 0 ? `Today` : `${dayOfWeek} ${dateOfMonth}`,
 				timeBlock: timeIntoTimeBlock,
 				totalSeconds: data.value,
-				lineChartPercentage: (data.value / this._maxTime) * 100 * 0.8,
+				lineChartPercentage: (data.value / this._maxHeatingTime) * 100 * 0.8,
 				minTemp: Math.floor(data.minTemp),
 				maxTemp: Math.floor(data.maxTemp),
 			};
@@ -202,7 +192,8 @@ export class HiveHeatingStatsCard extends LitElement {
 	}
 
 	render() {
-		this.getData();
+		// in the future we will be able to change this in the UI.
+		this.getData(7);
 		return !this._dataLoaded
 			? html`Data Loading...`
 			: html`
@@ -214,13 +205,13 @@ export class HiveHeatingStatsCard extends LitElement {
 								<div class="grey-box-half">
 									Total
 									<div class="grey-box-units">
-										<span>${this._totalTime.hours}</span>h <span>${this._totalTime.minutes}</span>m
+										<span>${this._totalHeatingTime.hours}</span>h <span>${this._totalHeatingTime.minutes}</span>m
 									</div>
 								</div>
 								<div class="grey-box-half">
 									Avg per day
 									<div class="grey-box-units">
-										<span>${this._averageTime.hours}</span>h <span>${this._averageTime.minutes}</span>m
+										<span>${this._averageHeatingTime.hours}</span>h <span>${this._averageHeatingTime.minutes}</span>m
 									</div>
 								</div>
 							</div>
@@ -235,7 +226,7 @@ export class HiveHeatingStatsCard extends LitElement {
 								</head>
 								<tbody>
 									${repeat(
-										this._formattedWeeklyData,
+										this._formattedData,
 										(data) => data.day,
 										(data, index) => html`
 											<tr>
