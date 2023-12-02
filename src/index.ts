@@ -125,7 +125,8 @@ export class HiveHeatingStatsCard extends LitElement {
 			const minTemp = Math.min(...daysTemperatureData.map((item) => (isNaN(Number(item.s)) ? 0 : Number(item.s))));
 			const maxTemp = Math.max(...daysTemperatureData.map((item) => (isNaN(Number(item.s)) ? 0 : Number(item.s))));
 
-			const daysHeatingValue: string | null = daysHeatingData[daysHeatingData.length - 1].s;
+			const daysHeatingValue: string | null =
+				daysHeatingData.length > 0 ? daysHeatingData[daysHeatingData.length - 1].s : null;
 
 			if (daysHeatingData.length > 0 && daysHeatingValue !== null && minTemp !== null && maxTemp !== null) {
 				date.value = Number(daysHeatingValue);
