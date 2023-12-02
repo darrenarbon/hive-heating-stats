@@ -152,8 +152,6 @@ export class HiveHeatingStatsCard extends LitElement {
 		}
 
 		this._dataLoaded = true;
-
-		console.log(this._formattedData);
 	}
 
 	calculateMaxHeatingTime(rawData: RawData[]): number {
@@ -252,10 +250,12 @@ export class HiveHeatingStatsCard extends LitElement {
 							<br />
 							<div>
 								<h2>Options</h2>
-								Show Comparison<input type="checkbox" id="switch" @click=${this.toggleShowComparison} /><label
-									for="switch"
-									>Toggle</label
-								>
+								Show Comparison<input
+									type="checkbox"
+									id="switch"
+									@click=${this.toggleShowComparison}
+									.checked=${this._showComparison}
+								/><label for="switch">Toggle</label>
 							</div>
 							<br />
 							<table class="week-view">
