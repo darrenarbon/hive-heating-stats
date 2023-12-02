@@ -35,6 +35,7 @@ export class HiveHeatingStatsCard extends LitElement {
 	private _maxHeatingTime: number = 0;
 	private _showComparison: boolean = false;
 	private _daysSampling: number = 7;
+	private _initialLoadInitiated: boolean = false;
 
 	static get styles(): CSSResultGroup {
 		return styles;
@@ -214,6 +215,7 @@ export class HiveHeatingStatsCard extends LitElement {
 	}
 
 	private toggleShowComparison() {
+		this._dataLoaded = false;
 		this._showComparison = !this._showComparison;
 		const daysToQuery = this._showComparison ? this._daysSampling * 2 : this._daysSampling;
 		this.getData(daysToQuery);
@@ -221,7 +223,10 @@ export class HiveHeatingStatsCard extends LitElement {
 
 	render() {
 		// in the future we will be able to change this in the UI.
-		this.getData(this._daysSampling);
+		if (!this._initialLoadInitiated) {
+			this._initialLoadInitiated = true;
+			this.getData(this._daysSampling);
+		}
 		return !this._dataLoaded
 			? html`Data Loading...`
 			: html`
