@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CSSResultGroup, html, LitElement } from 'lit';
+import { CSSResultGroup, html, LitElement, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { HomeAssistant } from 'custom-card-helpers';
@@ -33,6 +33,8 @@ export class HiveHeatingStatsCard extends LitElement {
 	private _averageHeatingTime: TimeBlock = { hours: 0, minutes: 0 };
 	private _formattedData: FormattedData[] = [];
 	private _maxHeatingTime: number = 0;
+	private _showComparison: boolean = false;
+	private _daysSampling: number = 7;
 
 	static get styles(): CSSResultGroup {
 		return styles;
@@ -131,11 +133,25 @@ export class HiveHeatingStatsCard extends LitElement {
 			}
 		}
 
-		this._totalHeatingTime = this.calculateTotalHeatingTime(rawData);
-		this._averageHeatingTime = this.calculateAverageHeatingTime(rawData);
+		// we need to calculate the max heating time for the whole dataset.
 		this._maxHeatingTime = this.calculateMaxHeatingTime(rawData);
-		this._formattedData = this.createFormattedData(rawData);
+
+		// if we are showing the comparison then we only need to make the total and average for the week being sampled which is the first this._daysSampling days.
+		if (this._showComparison) {
+			const rawDataForSamplePeriod: RawData[] = rawData.slice(0, this._daysSampling);
+			const rawDataForComparisonPeriod: RawData[] = rawData.slice(this._daysSampling, this._daysSampling * 2);
+			this._totalHeatingTime = this.calculateTotalHeatingTime(rawDataForSamplePeriod);
+			this._averageHeatingTime = this.calculateAverageHeatingTime(rawDataForSamplePeriod);
+			this._formattedData = this.createFormattedData(rawDataForSamplePeriod, rawDataForComparisonPeriod);
+		} else {
+			this._totalHeatingTime = this.calculateTotalHeatingTime(rawData);
+			this._averageHeatingTime = this.calculateAverageHeatingTime(rawData);
+			this._formattedData = this.createFormattedData(rawData);
+		}
+
 		this._dataLoaded = true;
+
+		console.log(this._formattedData);
 	}
 
 	calculateMaxHeatingTime(rawData: RawData[]): number {
@@ -174,26 +190,38 @@ export class HiveHeatingStatsCard extends LitElement {
 		return { hours, minutes };
 	}
 
-	createFormattedData(rawData: RawData[]) {
+	createFormattedData(rawData: RawData[], rawDataForComparisonPeriod?: RawData[]): FormattedData[] {
 		return rawData.map((data, index) => {
 			const thisDaysDate = new Date(data.date * 1000);
 			const dayOfWeek = thisDaysDate.toLocaleDateString('en-GB', { weekday: 'short' });
 			const dateOfMonth = thisDaysDate.toLocaleDateString('en-GB', { day: 'numeric' });
-			const timeIntoTimeBlock = this.convertDecimalToTimeBlockObject(data.value);
+			const heatingTimeIntoTimeBlock = this.convertDecimalToTimeBlockObject(data.value);
+			const comparisonHeatingTimeBlock =
+				this._showComparison && rawDataForComparisonPeriod && rawDataForComparisonPeriod[index]
+					? this.convertDecimalToTimeBlockObject(rawDataForComparisonPeriod[index].value)
+					: { hours: 0, minutes: 0 };
 			return {
 				day: index === 0 ? `Today` : `${dayOfWeek} ${dateOfMonth}`,
-				timeBlock: timeIntoTimeBlock,
+				heatingTimeBlock: heatingTimeIntoTimeBlock,
+				comparisonHeatingTimeBlock: comparisonHeatingTimeBlock,
 				totalSeconds: data.value,
-				lineChartPercentage: (data.value / this._maxHeatingTime) * 100 * 0.8,
+				heatingLineChartPercentage: (data.value / this._maxHeatingTime) * 100 * 0.8,
+				comparisonHeatingLineChartPercentage: (comparisonHeatingTimeBlock.hours / this._maxHeatingTime) * 100 * 0.8,
 				minTemp: Math.floor(data.minTemp),
 				maxTemp: Math.floor(data.maxTemp),
 			};
 		});
 	}
 
+	private toggleShowComparison() {
+		this._showComparison = !this._showComparison;
+		const daysToQuery = this._showComparison ? this._daysSampling * 2 : this._daysSampling;
+		this.getData(daysToQuery);
+	}
+
 	render() {
 		// in the future we will be able to change this in the UI.
-		this.getData(7);
+		this.getData(this._daysSampling);
 		return !this._dataLoaded
 			? html`Data Loading...`
 			: html`
@@ -216,6 +244,14 @@ export class HiveHeatingStatsCard extends LitElement {
 								</div>
 							</div>
 							<br />
+							<div>
+								<h2>Options</h2>
+								Show Comparison<input type="checkbox" id="switch" @click=${this.toggleShowComparison} /><label
+									for="switch"
+									>Toggle</label
+								>
+							</div>
+							<br />
 							<table class="week-view">
 								<head>
 									<tr>
@@ -232,10 +268,18 @@ export class HiveHeatingStatsCard extends LitElement {
 											<tr>
 												<td class="week-view-day-title">${index === 0 ? `Today` : `${data.day}`}</td>
 												<td class="week-view-day-value">
-													<div class="week-view-day-value-block" style="width: ${data.lineChartPercentage}%">
+													<div class="week-view-day-value-block" style="width: ${data.heatingLineChartPercentage}%">
 														&nbsp;
 													</div>
-													<div>&nbsp; ${data.timeBlock.hours}h ${data.timeBlock.minutes}m</div>
+													<div>&nbsp; ${data.heatingTimeBlock.hours}h ${data.heatingTimeBlock.minutes}m</div>
+													${this._showComparison
+														? html`<div
+																class="week-view-day-value-block-comparison"
+																style="width: ${data.comparisonHeatingLineChartPercentage}%"
+														  >
+																&nbsp;
+														  </div>`
+														: nothing}
 												</td>
 												<td class="week-view-day-temperatures">
 													<div>${data.minTemp}&deg; &nbsp; ${data.maxTemp}&deg;</div>

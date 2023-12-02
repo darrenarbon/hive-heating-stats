@@ -12,7 +12,7 @@
 			}
 
 			.ha-card {
-				width: 600px;
+				width: 650px;
 			}
 
 			.container {
@@ -121,10 +121,55 @@
 				float: left;
 			}
 
-            textarea {
-                width: 100%;
-                height: 100%;
-            }
+			.week-view-day-value-block-comparison {
+				height: 100%;
+				background-color: rgb(252, 71, 71);
+				border-radius: 20px;
+				float: left;
+				height: 7px;
+			}
+
+            input[type=checkbox]{
+				height: 0;
+				width: 0;
+				visibility: hidden;
+			}
+
+			label {
+				cursor: pointer;
+				text-indent: -9999px;
+				width: 50px;
+				height: 25px;
+				background: grey;
+				display: block;
+				border-radius: 20px;
+				position: relative;
+			}
+
+			label:after {
+				content: '';
+				position: absolute;
+				top: 3px;
+				left: 5px;
+				width: 18px;
+				height: 18px;
+				background: #fff;
+				border-radius: 90px;
+				transition: 0.3s;
+			}
+
+			input:checked + label {
+				background: #bada55;
+			}
+
+			input:checked + label:after {
+				left: calc(100% - 5px);
+				transform: translateX(-100%);
+			}
+
+			label:active:after {
+				width: 130px;
+			}
 		</style>
 	</head>
 	<body>
@@ -143,6 +188,10 @@
 					</div>
 				</div>
 				<br />
+				<div><h2>Options</h2>
+					Show Comparison<input type="checkbox" id="switch" /><label for="switch">Toggle</label>
+				</div>
+				<br />
 				<table class="week-view">
                     <head>
                         <tr>
@@ -156,6 +205,7 @@
 						<td class="week-view-day-value">
 							<div class="week-view-day-value-block MAX-WIDTH-IS-80" style="width: 80%">&nbsp;</div>
 							<div>&nbsp; 3h 04m</div>
+							<div class="week-view-day-value-block-comparison" style="width: 45%">&nbsp;</div>
 						</td>
 						<td class="week-view-day-temperatures"><div>-2&deg; &nbsp; 2&deg;</div></td>
 					</tr>
@@ -164,6 +214,7 @@
 						<td class="week-view-day-value">
 							<div class="week-view-day-value-block" style="width: 40%">&nbsp;</div>
 							<div>&nbsp; 1h 34m</div>
+							<div class="week-view-day-value-block-comparison" style="width: 65%">&nbsp;</div>
 						</td>
 						<td class="week-view-day-temperatures"><div>1&deg; &nbsp; 12&deg;</div></td></td>
 					</tr>
@@ -172,6 +223,7 @@
 						<td class="week-view-day-value">
 							<div class="week-view-day-value-block" style="width: 20%">&nbsp;</div>
 							<div>&nbsp; 0h 46m</div>
+							<div class="week-view-day-value-block-comparison" style="width: 25%">&nbsp;</div>
 						</td>
 						<td class="week-view-day-temperatures"><div>8&deg; &nbsp; 13&deg;</div></td></td>
 					</tr>
@@ -180,6 +232,7 @@
 						<td class="week-view-day-value">
 							<div class="week-view-day-value-block" style="width: 25%">&nbsp;</div>
 							<div>&nbsp; 0h 56m</div>
+							<div class="week-view-day-value-block-comparison" style="width: 45%">&nbsp;</div>
 						</td>
 						<td class="week-view-day-temperatures"><div>8&deg; &nbsp; 13&deg;</div></td></td>
 					</tr>
@@ -188,6 +241,7 @@
 						<td class="week-view-day-value">
 							<div class="week-view-day-value-block" style="width: 74%">&nbsp;</div>
 							<div>&nbsp; 2h 48m</div>
+							<div class="week-view-day-value-block-comparison" style="width: 73%">&nbsp;</div>
 						</td>
 						<td class="week-view-day-temperatures"><div>-2&deg; &nbsp; 3&deg;</div></td></td>
 					</tr>
@@ -196,6 +250,7 @@
 						<td class="week-view-day-value">
 							<div class="week-view-day-value-block" style="width: 66%">&nbsp;</div>
 							<div>&nbsp; 2h 34m</div>
+							<div class="week-view-day-value-block-comparison" style="width: 54%">&nbsp;</div>
 						</td>
 						<td class="week-view-day-temperatures"><div>-2&deg; &nbsp; 8&deg;</div></td></td>
 					</tr>
@@ -204,13 +259,11 @@
 						<td class="week-view-day-value">
 							<div class="week-view-day-value-block" style="width: 64%">&nbsp;</div>
 							<div>&nbsp; 2h 24m</div>
+							<div class="week-view-day-value-block-comparison" style="width: 23%">&nbsp;</div>
 						</td>
 						<td class="week-view-day-temperatures"><div>-2&deg; &nbsp; 9&deg;</div></td></td>
 					</tr>
 				</table>
-                <textarea>
-
-                </textarea>
 			</div>
 		</div>
 	</body>

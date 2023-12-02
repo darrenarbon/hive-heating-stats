@@ -8,9 +8,11 @@ export type RawData = {
 
 export type FormattedData = {
 	day: string;
-	timeBlock: TimeBlock;
+	heatingTimeBlock: TimeBlock;
+	comparisonHeatingTimeBlock: TimeBlock;
 	totalSeconds: number;
-	lineChartPercentage: number;
+	heatingLineChartPercentage: number;
+	comparisonHeatingLineChartPercentage: number;
 	minTemp: number;
 	maxTemp: number;
 };

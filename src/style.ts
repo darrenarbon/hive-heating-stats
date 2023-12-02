@@ -105,4 +105,54 @@ export const styles: CSSResultGroup = css`
 		border-radius: 10px;
 		float: left;
 	}
+
+	.week-view-day-value-block-comparison {
+		height: 100%;
+		background-color: rgb(252, 71, 71);
+		border-radius: 20px;
+		float: left;
+		height: 7px;
+	}
+
+	input[type='checkbox'] {
+		height: 0;
+		width: 0;
+		visibility: hidden;
+	}
+
+	label {
+		cursor: pointer;
+		text-indent: -9999px;
+		width: 50px;
+		height: 25px;
+		background: grey;
+		display: block;
+		border-radius: 20px;
+		position: relative;
+	}
+
+	label:after {
+		content: '';
+		position: absolute;
+		top: 3px;
+		left: 5px;
+		width: 18px;
+		height: 18px;
+		background: #fff;
+		border-radius: 90px;
+		transition: 0.3s;
+	}
+
+	input:checked + label {
+		background: #bada55;
+	}
+
+	input:checked + label:after {
+		left: calc(100% - 5px);
+		transform: translateX(-100%);
+	}
+
+	label:active:after {
+		width: 130px;
+	}
 `;
