@@ -46,6 +46,20 @@ export type HiveHeatingStatsCardConfig = {
 		heating: string;
 		temperature: string;
 	};
+	show_comparison_with_previous_period: boolean;
+	period_length: PeriodLength;
+};
+
+export enum PeriodLength {
+	Day = 'day',
+	Week = 'week',
+	Month = 'month',
+	Year = 'year',
+}
+
+export type PeriodLengthNumbers = {
+	current: number;
+	comparison: number;
 };
 
 export type DateRange = {
