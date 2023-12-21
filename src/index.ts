@@ -40,7 +40,7 @@ export class HiveHeatingStatsCard extends LitElement {
 		return styles;
 	}
 
-	static getStubConfig(): HiveHeatingStatsCardConfig {
+	static getStubConfig() {
 		return {
 			entities: {
 				heating: 'sensor.heating_on_today',
@@ -48,7 +48,7 @@ export class HiveHeatingStatsCard extends LitElement {
 			},
 			show_comparison_with_previous_period: false,
 			period_length: PeriodLength.Week,
-		};
+		} as unknown as HiveHeatingStatsCardConfig;
 	}
 
 	setConfig(config: HiveHeatingStatsCardConfig): void {
