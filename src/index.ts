@@ -220,7 +220,7 @@ export class HiveHeatingStatsCard extends LitElement {
 		// in the future we will be able to change this in the UI.
 		if (!this._initialLoadInitiated) {
 			this._initialLoadInitiated = true;
-			this.getData(this._daysSampling);
+			this.getData(this._config.show_comparison_with_previous_period ? this._daysSampling * 2 : this._daysSampling);
 		}
 		return !this._dataLoaded
 			? html`Data Loading...`
