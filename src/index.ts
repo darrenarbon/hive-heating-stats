@@ -56,7 +56,7 @@ export class HiveHeatingStatsCard extends LitElement {
 			(config && config.entities && !config.entities.heating) ||
 			(config && config.entities && !config.entities.temperature)
 		) {
-			throw Error('Entities are required');
+			throw Error('Entities are required.');
 		}
 
 		const customConfig: HiveHeatingStatsCardConfig = JSON.parse(JSON.stringify(config));
